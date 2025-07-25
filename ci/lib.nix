@@ -1,6 +1,7 @@
 pkgs: {
   check_conventional_commit = import ./check_conventional_commit.nix pkgs;
   check_todos = import ./check_todos.nix pkgs;
+  check_pr_labels = import ./check_pr_labels.nix pkgs;
   lint = {
     nix = src: let
       deadnix = "${pkgs.deadnix}/bin/deadnix";
