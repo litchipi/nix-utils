@@ -1,9 +1,7 @@
 # Checks if some TODOs are left unbound to an issue on the repository
 # Should work for any Github-compatible forge API
-pkgs: let
-  rg = "${pkgs.ripgrep}/bin/rg";
-  jq = "${pkgs.jq}/bin/jq";
-in {
+
+pkgs: {
   ignoredFiles ? [],
   token ? "$FORGEJO_TOKEN",
   repo ? "$FORGEJO_REPOSITORY",
@@ -11,6 +9,8 @@ in {
   addCurlOpts ? [],
   debug ? false,
 }: let
+  rg = "${pkgs.ripgrep}/bin/rg";
+  jq = "${pkgs.jq}/bin/jq";
   filter_files = if builtins.length ignoredFiles > 0
     then "|${rg} -v " + (builtins.concatStringsSep "|" ignoredFiles)
     else "";
