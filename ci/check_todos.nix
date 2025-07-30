@@ -12,7 +12,7 @@ pkgs: {
   rg = "${pkgs.ripgrep}/bin/rg";
   jq = "${pkgs.jq}/bin/jq";
   filter_files = if builtins.length ignoredFiles > 0
-    then "|${rg} -v " + (builtins.concatStringsSep "|" ignoredFiles)
+    then "|${rg} -v \"" + (builtins.concatStringsSep "|" ignoredFiles) + "\""
     else "";
   curlOpts = [
     "-s"
