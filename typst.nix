@@ -102,26 +102,31 @@ in {
     outfname="''${prefix}''${fname%.typ}.pdf"
     echo "Generating PDF for $outfname"
 
-    docout="''${fpath%.typ}_doc.typ"
-    cp $fpath "$docout"
-    sed -i "s/#show: later/#v(0pt)/g" $docout
-
     typst compile \
       --root "$SRC" \
-      "$docout" \
+      "$fpath" \
       "$out/$outfname"
+    docsha=$(sha256sum "$out/$outfname" | awk '{print $1}')
 
-    presout="''${fpath%.typ}_pres.typ"
-    cp $fpath "$presout"
-    sed -i "s+#code_annex+#silence+g" $presout
-    sed -i "s+#annex+#silence+g" $presout
+    if grep "slide" "$fpath" 1>/dev/null 2>/dev/null; then
+      presout="''${fpath%.typ}_pres.typ"
+      cp $fpath "$presout"
+      sed -i "s+#code_annex+#silence+g" $presout
+      sed -i "s+#annex+#silence+g" $presout
 
-    if grep -q "#show: later" $presout; then
       mkdir -p $(dirname "$out/presentation/''${outfname}")
       typst compile \
         --root "$SRC" \
+        --input presentation=1 \
         "$presout" \
-        "$out/presentation/''$outfname"
+        "$out/presentation/$outfname"
+      pressha=$(sha256sum "$out/presentation/$outfname" | awk '{print $1}')
+
+      if [[ "$pressha" == "$docsha" ]]; then
+        echo "Presentation & document are the same"
+        rm "$out/presentation/$outfname"
+        ln -s "$out/$outfname" "$out/presentation/$outfname"
+      fi
     fi
   '';
 
