@@ -11,6 +11,8 @@ pkgs: let
     typst_deps,
     addDeps ? [],
     addFiles ? [],
+    typstInputs ? {},
+    typstOpts ? [],
     mkdir ? true,
   ... }: src: pkgs.stdenv.mkDerivation {
     name = builtins.baseNameOf src;
@@ -29,7 +31,10 @@ pkgs: let
     configurePhase = ''
     '';
 
-    buildPhase = ''
+    buildPhase = let
+      opts = (pkgs.lib.attrsets.mapAttrsToList (key: val: "--input ${key}=${toString val}") typstInputs) ++ typstOpts;
+      typstCmd = "typst compile --root=\"$SRC\" " + (builtins.concatStringsSep " " opts);
+    in ''
       cd src
       ln -s ${common} ./common
       mkdir -p $out
@@ -51,7 +56,7 @@ pkgs: let
           mkdir -p "$out/''${prefix}"
       '') + ''
 
-        ${buildScript}
+        ${buildScript typstCmd}
 
       done
 
@@ -89,23 +94,17 @@ in {
     };
   };
 
-  mkTypstDocs = baseDeriv ''
+  mkTypstDocs = baseDeriv (typst: ''
     outfname="''${prefix}''${fname%.typ}.pdf"
     echo "Generating PDF for $outfname"
-    typst compile \
-      --root "$SRC" \
-      "$fpath" \
-      "$out/$outfname"
-  '';
+    ${typst} "$fpath" "$out/$outfname"
+  '');
 
-  mkPolyluxPresentation = baseDeriv ''
+  mkPolyluxPresentation = baseDeriv (typst: ''
     outfname="''${prefix}''${fname%.typ}.pdf"
     echo "Generating PDF for $outfname"
 
-    typst compile \
-      --root "$SRC" \
-      "$fpath" \
-      "$out/$outfname"
+    ${typst} "$fpath" "$out/$outfname"
     docsha=$(sha256sum "$out/$outfname" | awk '{print $1}')
 
     if grep "slide" "$fpath" 1>/dev/null 2>/dev/null; then
@@ -115,11 +114,7 @@ in {
       sed -i "s+#annex+#silence+g" $presout
 
       mkdir -p $(dirname "$out/presentation/''${outfname}")
-      typst compile \
-        --root "$SRC" \
-        --input presentation=1 \
-        "$presout" \
-        "$out/presentation/$outfname"
+      ${typst} --input presentation=1 "$presout" "$out/presentation/$outfname"
       pressha=$(sha256sum "$out/presentation/$outfname" | awk '{print $1}')
 
       if [[ "$pressha" == "$docsha" ]]; then
@@ -128,7 +123,7 @@ in {
         ln -s "$out/$outfname" "$out/presentation/$outfname"
       fi
     fi
-  '';
+  '');
 
   mkDocFromText = { name, version, text, config }: pkgs.stdenv.mkDerivation {
     pname = name;
