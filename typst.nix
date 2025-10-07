@@ -62,7 +62,7 @@ pkgs: let
 
       ${builtins.concatStringsSep "\n" (builtins.map (f: ''
         dirname ${f} | xargs realpath --relative-to=$PWD | xargs mkdir -p
-        cp ./${f} $out/${f}
+        cp -rL ./${f} $out/${f}
       '') addFiles)}
     '';
   };
