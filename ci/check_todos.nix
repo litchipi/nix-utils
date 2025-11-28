@@ -52,6 +52,10 @@ in pkgs.writeShellScript "check_todos" ''
   set +e
   while read ISSUE; do
     got=$(${curl} "${server}/api/v1/repos/${repo}/issues/$ISSUE")
+    if echo "$got" | ${jq} ".description" | grep -E "close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved" 2>/dev/null 1>/dev/null; then
+      echo "[!] Issue $ISSUE will be closed by this PR"
+      ERRCODE=1
+    fi
     if ! echo "$got" | ${jq} ".state" | ${rg} "\"open\"" 2>/dev/null 1>/dev/null
     then
       echo "[!] Issue $ISSUE is closed or missing"
@@ -61,7 +65,7 @@ in pkgs.writeShellScript "check_todos" ''
 
   if ! [ -z "$TODOS_LEFT" ]; then
     echo "[!] Some TODOs are not linked to an existing issue"
-    ${rg} -n "TODO" | ${rg} -v "\(#\d+\)" | ${rg} -v "IGNORE-TODO"
+    echo "$TODOS_LEFT" | tr ' ' '\n'
     ERRCODE=1
   fi
 
