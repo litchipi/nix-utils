@@ -22,6 +22,9 @@ pkgs: let
     phases = ["unpackPhase" "configurePhase" "buildPhase"];
 
     unpackPhase = ''
+      # Allows for out-of-sources symlinking without permissions problems
+      mkdir -p a/b/c/d/e
+      cd a/b/c/d/e
       export HOME=$(realpath ./.home)
       ${setup_typst_deps typst_deps}
       cp -r ${src} ./src
