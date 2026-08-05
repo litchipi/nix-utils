@@ -16,7 +16,7 @@
 
     envexport = builtins.concatStringsSep "\n" (pkgs.lib.attrsets.mapAttrsToList
       (n: v: "export ${n}=${v}")
-    ) env;
+    env);
 
     mkApp = name: script: {
       type = "app";
@@ -30,7 +30,7 @@
     };
   in {
     apps = builtins.mapAttrs mkApp {
-      default = "${pythonpkg}/bin/python ./script.py";
+      default = "${pythonpkg}/bin/python ./script.py $@";
     };
 
     devShells.default = pkgs.mkShell ({
