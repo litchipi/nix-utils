@@ -38,7 +38,7 @@ pkgs: let
 
     buildPhase = let
       opts = (pkgs.lib.attrsets.mapAttrsToList (key: val: "--input ${key}=${toString val}") typstInputs) ++ typstOpts;
-      typstCmd = "typst compile --root=\"$SRC\" " + (builtins.concatStringsSep " " opts);
+      typstCmd = "typst compile " + (builtins.concatStringsSep " " opts);
     in ''
       cd src
       ln -s ${common} ./common
@@ -48,17 +48,17 @@ pkgs: let
         unset SOURCE_DATE_EPOCH
         export HOME=$(realpath ../.home)
         export TYPST_FONT_PATHS=${fonts}
-        export SRC=$(realpath .)
+        export TYPST_ROOT="$(realpath .)"
         set -e
         rootd=$(realpath `dirname $fpath`)
         fname=$(basename $fpath)
     ''
       + (if (! mkdir) then ''
-          prefix=$(echo "''${rootd#$SRC}/" | cut -d'/' -f2- | sed 's+/+_+g')
+        prefix=$(echo "''${rootd#$TYPST_ROOT}/" | cut -d'/' -f2- | sed 's+/+_+g')
       ''
       else ''
-          prefix=$(echo "''${rootd#$SRC}/" | cut -d'/' -f2-)
-          mkdir -p "$out/''${prefix}"
+        prefix=$(echo "''${rootd#$TYPST_ROOT}/" | cut -d'/' -f2-)
+        mkdir -p "$out/''${prefix}"
       '') + ''
 
         ${preBuild}
