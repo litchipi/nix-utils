@@ -14,6 +14,8 @@ pkgs: let
     typstInputs ? {},
     typstOpts ? [],
     mkdir ? true,
+    preBuild ? "",
+    postBuild ? "",
   ... }: src: pkgs.stdenv.mkDerivation {
     name = builtins.baseNameOf src;
     inherit src;
@@ -59,7 +61,9 @@ pkgs: let
           mkdir -p "$out/''${prefix}"
       '') + ''
 
+        ${preBuild}
         ${buildScript typstCmd}
+        ${postBuild}
 
       done
 
